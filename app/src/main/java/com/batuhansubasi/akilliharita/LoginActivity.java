@@ -1,7 +1,13 @@
 package com.batuhansubasi.akilliharita;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.Build;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -34,40 +40,66 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         setContentView(R.layout.activity_login);
         progressDialog = new ProgressDialog(this);
 
-        //yolcu ve surucu radiobuttonlarının kod icerisinde atanmasi
-        rg1        = (RadioGroup)  findViewById(R.id.radioGroup);
-        yolcusecim = (RadioButton) findViewById(R.id.radioButton);
-        surucusecim = (RadioButton) findViewById(R.id.radioButton2);
+        //internet servisi açık mı değil mi kontrolü
+        boolean connected = internet_kontrol();
 
-        //yetkilendirme tarafi
-        firebaseAuth = FirebaseAuth.getInstance();
+        if (connected == false){
+            progressDialog.setMessage("Uygulamayı kullanabilmek icin lütfen internetinizi açınız!...");
+            progressDialog.show();
+        } else {
 
-        //kayit olma ekrani
-        kayitButton = (Button) findViewById(R.id.button2);
-        kayitButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                openActivityRegister();
+            //konum servisi açık mı değil mi kontrolü
+            connected = isLocationEnabled(getApplicationContext());
+            if (connected == false) {
+                progressDialog.setMessage("Uygulamayı kullanabilmek icin lütfen konum servisini açınız!...");
+                progressDialog.show();
+            }  else {
+
+                    //yolcu ve surucu radiobuttonlarının kod icerisinde atanmasi
+                    rg1 = (RadioGroup) findViewById(R.id.radioGroup);
+                    yolcusecim = (RadioButton) findViewById(R.id.radioButton);
+                    surucusecim = (RadioButton) findViewById(R.id.radioButton2);
+
+                    //yetkilendirme tarafi
+                    firebaseAuth = FirebaseAuth.getInstance();
+
+                    //kayit olma ekrani
+                    kayitButton = (Button) findViewById(R.id.button2);
+                    kayitButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            openActivityRegister();
+                        }
+                    });
+
+                    //sifre degistirme ekrani
+                    sifreDegistirButton = (Button) findViewById(R.id.button3);
+                    sifreDegistirButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            openActivityChangePassword();
+                        }
+                    });
+
+                    //ekranda girilen butondaki isim-sifre değerlerinin değişkenlere atilmasi
+                    loginName = (EditText) findViewById(R.id.loginName);
+                    loginPassword = (EditText) findViewById(R.id.loginPassword);
+
+                    //giris butonunun degiskene atilmasi
+                    girisButton = (Button) findViewById(R.id.btnLogin);
+                    girisButton.setOnClickListener(this);
+                }
             }
-        });
+    }
 
-        //sifre degistirme ekrani
-        sifreDegistirButton = (Button)findViewById(R.id.button3);
-        sifreDegistirButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                openActivityChangePassword();
-            }
-        });
-
-        //ekranda girilen butondaki isim-sifre değerlerinin değişkenlere atilmasi
-        loginName = (EditText)findViewById(R.id.loginName);
-        loginPassword = (EditText)findViewById(R.id.loginPassword);
-
-        //giris butonunun degiskene atilmasi
-        girisButton = (Button)findViewById(R.id.btnLogin);
-        girisButton.setOnClickListener(this);
-
+    private boolean internet_kontrol() {
+        ConnectivityManager connectivityManager = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+        if(connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).getState() == NetworkInfo.State.CONNECTED ||
+                connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).getState() == NetworkInfo.State.CONNECTED) {
+            return true;
+        }
+        else
+            return false;
     }
 
     //kayit olma activitysinin açılması
@@ -110,7 +142,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             progressDialog.setMessage("Giris Yapiliyor...");
             progressDialog.show();
 
-            //kullanici adi ve sifreyle giris denenmesi
             firebaseAuth.signInWithEmailAndPassword(kullaniciAdi, sifre).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                 @Override
                 public void onComplete(@NonNull Task<AuthResult> task) {
@@ -161,6 +192,18 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     public void surucuSayfasi(){
         Intent intent = new Intent(this, SurucuActivity.class);
         startActivity(intent);
+    }
+
+    public static Boolean isLocationEnabled(Context context)
+    {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+            return lm.isLocationEnabled();
+        } else {
+            int mode = Settings.Secure.getInt(context.getContentResolver(), Settings.Secure.LOCATION_MODE,
+                    Settings.Secure.LOCATION_MODE_OFF);
+            return  (mode != Settings.Secure.LOCATION_MODE_OFF);
+        }
     }
 
 }

@@ -17,6 +17,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".ChangePassword" />
+        <activity android:name=".RegisterActivity" />
+        <activity android:name=".SurucuActivity" />
+        <activity android:name=".YolcuActivity"></activity>
     </application>
 
 </manifest>
