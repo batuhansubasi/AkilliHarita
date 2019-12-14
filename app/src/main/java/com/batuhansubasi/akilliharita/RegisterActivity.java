@@ -1,6 +1,7 @@
 package com.batuhansubasi.akilliharita;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -10,6 +11,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -24,6 +26,8 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
     private FirebaseAuth firebaseAuth;
     private RadioGroup rg1;
     private RadioButton yolcusecim, surucusecim, rb;
+    private TextView anaMenuyeDon;
+    private String kullaniciAdi;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,7 +48,8 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
         kayitSifre1       = (EditText) findViewById(R.id.registerPassword);
         kayitSifre2       = (EditText) findViewById(R.id.registerPassword2);
         kayitOlButton     = (Button)   findViewById(R.id.buttonregister);
-
+        anaMenuyeDon = (TextView) findViewById(R.id.tvanaMenuyeDonus);
+        anaMenuyeDon.setOnClickListener(this);
         kayitOlButton.setOnClickListener(this);
     }
 
@@ -55,10 +60,13 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
         if (view == kayitOlButton){
             registerUser();
         }
+        else if(view == anaMenuyeDon) {
+            startActivity(new Intent(this, LoginActivity.class));
+        }
     }
 
     private void registerUser() {
-        String kullaniciAdi = kayitKullanıcıAdı.getText().toString().trim();
+        kullaniciAdi        = kayitKullanıcıAdı.getText().toString().trim();
         String sifre        = kayitSifre1.getText().toString().trim();
         String gecici       = kayitSifre2.getText().toString().trim();
 
@@ -68,15 +76,15 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
             return;
         }
         if(TextUtils.isEmpty(sifre)){
-            Toast.makeText(getApplicationContext(), "Sifre Bos!...", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "Şifre Boş!...", Toast.LENGTH_LONG).show();
             return;
         }
         if(!sifre.equalsIgnoreCase(gecici)){
-            Toast.makeText(getApplicationContext(), "İki sifre ayni olmalidir!...", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "İki şifre aynı olmalıdır!...", Toast.LENGTH_LONG).show();
             return;
         }
         if(sifre.length() < 6){
-            Toast.makeText(getApplicationContext(), "Sifre 6 karakterden az olamaz!...", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "Şifre 6 karakterden az olamaz!...", Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -89,7 +97,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
             kullaniciAdi = kullaniciAdi + "@surucu.com";
         }
 
-        progressDialog.setMessage("Kullanici Kaydediliyor...");
+        progressDialog.setMessage("Kullanıcı Kaydediliyor...");
         progressDialog.show();
 
         //kullanici adi ve sifreyle kullanıcının firebase kaydedilmesi
@@ -99,8 +107,17 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
                 if (task.isSuccessful()){
                     Toast.makeText(getApplicationContext(), "Kaydedildi", Toast.LENGTH_SHORT).show();
                     progressDialog.hide();
+                    if(rb.getText().equals("Yolcu")) {
+                        startActivity(new Intent(RegisterActivity.this, YolcuActivity.class));
+                    }
+                    else {
+                        //Sürücünün araç bilgilerinin istenmesi
+                        Intent intent = new Intent(RegisterActivity.this, AracBilgileriEkle.class);
+                        intent.putExtra("EXTRA_SESSION_ID", kullaniciAdi);
+                        startActivity(intent);
+                    }
                 } else {
-                    Toast.makeText(getApplicationContext(), "Kayit Yapilamadi!...", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "Kayıt Yapılamadı!...", Toast.LENGTH_SHORT).show();
                     progressDialog.hide();
                 }
             }

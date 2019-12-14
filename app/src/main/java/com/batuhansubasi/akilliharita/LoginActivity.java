@@ -12,7 +12,6 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -23,7 +22,6 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -33,25 +31,32 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private FirebaseAuth firebaseAuth;
     private RadioGroup rg1;
     private RadioButton yolcusecim, surucusecim, rb;
-
+    private String email;
+    public final static String EXTRA_MESSAGE = "com.batuhansubasi.akilliharita.MESAJ";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         progressDialog = new ProgressDialog(this);
 
+/*
+        // Harita acilmasi icin
+        Intent i = new Intent(getBaseContext(), YolcuActivity.class);
+        startActivity(i);
+*/      //startActivity(new Intent(this, YolcuActivity.class));
+
         //internet servisi açık mı değil mi kontrolü
         boolean connected = internet_kontrol();
 
         if (connected == false){
-            progressDialog.setMessage("Uygulamayı kullanabilmek icin lütfen internetinizi açınız!...");
+            progressDialog.setMessage("Uygulamayı kullanabilmek için lütfen internetinizi açınız!...");
             progressDialog.show();
         } else {
 
             //konum servisi açık mı değil mi kontrolü
             connected = isLocationEnabled(getApplicationContext());
             if (connected == false) {
-                progressDialog.setMessage("Uygulamayı kullanabilmek icin lütfen konum servisini açınız!...");
+                progressDialog.setMessage("Uygulamayı kullanabilmek için lütfen konum servisini açınız!...");
                 progressDialog.show();
             }  else {
 
@@ -125,7 +130,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private void userLogin() {
         String kullaniciAdi = loginName.getText().toString().trim();
         String sifre = loginPassword.getText().toString().trim();
-
         //genel kontrollerin yapilmasi
         boolean basarili = kontrol(kullaniciAdi, sifre);
 
@@ -133,20 +137,20 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             //yolcu ve surucu seçimine göre authentication ayrımının yapilmasi
             int radiobuttonid = rg1.getCheckedRadioButtonId();
             rb = findViewById(radiobuttonid);
+            email = kullaniciAdi;
             if (rb.getText().equals("Yolcu")) {
                 kullaniciAdi = kullaniciAdi + "@yolcu.com";
             } else {
                 kullaniciAdi = kullaniciAdi + "@surucu.com";
             }
-
-            progressDialog.setMessage("Giris Yapiliyor...");
+            progressDialog.setMessage("Giriş Yapılıyor...");
             progressDialog.show();
 
             firebaseAuth.signInWithEmailAndPassword(kullaniciAdi, sifre).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                 @Override
                 public void onComplete(@NonNull Task<AuthResult> task) {
                     if (task.isSuccessful()) {
-                        Toast.makeText(getApplicationContext(), "Giris Basarili!...", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Giriş Başarılı!...", Toast.LENGTH_SHORT).show();
                         progressDialog.hide();
 
                         //giris basariliysa hangi sayfaya yönlendirileceği...
@@ -157,7 +161,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                         }
 
                     } else {
-                        Toast.makeText(getApplicationContext(), "Giris Yapilamadi!...", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Giriş Yapılamadı!...", Toast.LENGTH_SHORT).show();
                         progressDialog.hide();
                     }
                 }
@@ -168,17 +172,17 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
     private boolean kontrol(String kullaniciAdi, String sifre) {
         if(TextUtils.isEmpty(kullaniciAdi)){
-            Toast.makeText(getApplicationContext(), "Kullanici Adi Bos!...", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "Kullanıcı Adı Boş!...", Toast.LENGTH_LONG).show();
             return false;
         }
 
         if(TextUtils.isEmpty(sifre)){
-            Toast.makeText(getApplicationContext(), "Sifre Bos!...", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "Şifre Boş!...", Toast.LENGTH_LONG).show();
             return false;
         }
 
         if(sifre.length() < 6){
-            Toast.makeText(getApplicationContext(), "Sifre 6 karakterden az olamaz!...", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "Şifre 6 karakterden az olamaz!...", Toast.LENGTH_LONG).show();
             return false;
         }
         return true;
@@ -190,7 +194,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     }
 
     public void surucuSayfasi(){
-        Intent intent = new Intent(this, SurucuActivity.class);
+        Intent intent = new Intent(LoginActivity.this, SurucuActivity.class);
+        intent.putExtra("EXTRA_SESSION_ID", email);
         startActivity(intent);
     }
 

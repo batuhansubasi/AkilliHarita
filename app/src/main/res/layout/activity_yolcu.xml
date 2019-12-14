@@ -1,0 +1,22 @@
+<fragment xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:map="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/map"
+    android:name="com.google.android.gms.maps.SupportMapFragment"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.batuhansubasi.akilliharita.SurucuActivity" >
+
+    <Button
+        android:id="@+id/bsurucuBul"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="left|top"
+        android:layout_marginTop="20dp"
+        android:padding="10dp"
+        android:textSize="8dp"
+        android:paddingRight="10dp"
+        android:text="Sürücüleri Bul"
+        android:onClick="konumuBul"/>
+
+</fragment>
