@@ -67,6 +67,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
 
     private void registerUser() {
         kullaniciAdi        = kayitKullanıcıAdı.getText().toString().trim();
+        final String email        = kullaniciAdi;
         String sifre        = kayitSifre1.getText().toString().trim();
         String gecici       = kayitSifre2.getText().toString().trim();
 
@@ -88,7 +89,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
             return;
         }
 
-        //yolcu ve surucu seçimine göre authentication ayrımının yapilmasi
+        //yolcu ve surucu seçimine göre authen tication ayrımının yapilmasi
         int radiobuttonid = rg1.getCheckedRadioButtonId();
         rb = findViewById(radiobuttonid);
         if(rb.getText().equals("Yolcu")){
@@ -113,7 +114,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
                     else {
                         //Sürücünün araç bilgilerinin istenmesi
                         Intent intent = new Intent(RegisterActivity.this, AracBilgileriEkle.class);
-                        intent.putExtra("EXTRA_SESSION_ID", kullaniciAdi);
+                        intent.putExtra("EXTRA_SESSION_ID", email);
                         startActivity(intent);
                     }
                 } else {

@@ -19,9 +19,14 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Toast;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -31,19 +36,21 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private FirebaseAuth firebaseAuth;
     private RadioGroup rg1;
     private RadioButton yolcusecim, surucusecim, rb;
-    private String email;
+    private String email, kullaniciAdi;
     public final static String EXTRA_MESSAGE = "com.batuhansubasi.akilliharita.MESAJ";
+    private FirebaseFirestore db;
+    private DocumentReference noteRef;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         progressDialog = new ProgressDialog(this);
 
-/*
-        // Harita acilmasi icin
-        Intent i = new Intent(getBaseContext(), YolcuActivity.class);
-        startActivity(i);
-*/      //startActivity(new Intent(this, YolcuActivity.class));
+
+        /*Intent i = new Intent(getBaseContext(), YolcuActivity.class);
+        startActivity(i);*/
+
 
         //internet servisi açık mı değil mi kontrolü
         boolean connected = internet_kontrol();
@@ -128,47 +135,84 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     }
 
     private void userLogin() {
-        String kullaniciAdi = loginName.getText().toString().trim();
+        kullaniciAdi = loginName.getText().toString().trim();
         String sifre = loginPassword.getText().toString().trim();
+
         //genel kontrollerin yapilmasi
         boolean basarili = kontrol(kullaniciAdi, sifre);
 
-        if (basarili != false) {
+        if (basarili != false) { //kontrollerden basarili sekilde geçtiyse
             //yolcu ve surucu seçimine göre authentication ayrımının yapilmasi
             int radiobuttonid = rg1.getCheckedRadioButtonId();
+
             rb = findViewById(radiobuttonid);
             email = kullaniciAdi;
+
             if (rb.getText().equals("Yolcu")) {
                 kullaniciAdi = kullaniciAdi + "@yolcu.com";
             } else {
                 kullaniciAdi = kullaniciAdi + "@surucu.com";
             }
+
             progressDialog.setMessage("Giriş Yapılıyor...");
             progressDialog.show();
 
             firebaseAuth.signInWithEmailAndPassword(kullaniciAdi, sifre).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                @Override
                 public void onComplete(@NonNull Task<AuthResult> task) {
+
+                    //Kullanıcı adı ve şifreyle beraber yetkilendirme kontrolü firebase
                     if (task.isSuccessful()) {
+
                         Toast.makeText(getApplicationContext(), "Giriş Başarılı!...", Toast.LENGTH_SHORT).show();
                         progressDialog.hide();
 
                         //giris basariliysa hangi sayfaya yönlendirileceği...
-                        if (rb.getText().equals("Yolcu")) {
+                        if (rb.getText().equals("Yolcu")) { //Yolcu
+                            //yolcu aktivitesinin açılması
                             yolcuSayfasi();
-                        } else {
-                            surucuSayfasi();
-                        }
 
-                    } else {
-                        Toast.makeText(getApplicationContext(), "Giriş Yapılamadı!...", Toast.LENGTH_SHORT).show();
-                        progressDialog.hide();
+                        } else { //Sürücü
+                            //bu kullanıcıyla alakalı araç bilgisi var mı kontrolü?
+
+                            //firestore
+                            db = FirebaseFirestore.getInstance();
+
+                            //email adresine göre arac bilgilerinin firestoredan çekilmesi...
+                            noteRef = db.collection("CarInfos").document(kullaniciAdi);
+
+                            noteRef.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                                @Override
+                                public void onSuccess(DocumentSnapshot documentSnapshot) {
+                                    //Arac bilgisi bulunduysa sürücü sayfasinin gösterilmesi
+                                    surucuSayfasi();
+                                }
+
+                            }).addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    //Arac bilgisi bulunamadığı için arac bilgileri ekranına yönlendirilmesi
+                                    progressDialog.setMessage("Arac Bilgileriniz Eksik! Harita ekranına yönlendiremiyorum...");
+                                    progressDialog.show();
+
+                                    //3 saniye bekletiyorum, adamın progress dialog' u görmesi için
+                                    try {
+                                        Thread.sleep(3000);
+                                    } catch (InterruptedException ex) {
+                                        ex.printStackTrace();
+                                    }
+
+                                    progressDialog.hide();
+                                    AracBilgileriEkle();
+                                }
+                            });
+                        }
                     }
                 }
-            });
-        }
 
+        });
     }
+    }
+
 
     private boolean kontrol(String kullaniciAdi, String sifre) {
         if(TextUtils.isEmpty(kullaniciAdi)){
@@ -196,6 +240,13 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     public void surucuSayfasi(){
         Intent intent = new Intent(LoginActivity.this, SurucuActivity.class);
         intent.putExtra("EXTRA_SESSION_ID", email);
+        startActivity(intent);
+    }
+
+    public void AracBilgileriEkle() {
+        //AracBilgileriniEkle Activity' sine Geçiş
+        Intent intent = new Intent(LoginActivity.this, AracBilgileriEkle.class);
+        intent.putExtra("EXTRA_SESSION_ID", kullaniciAdi);
         startActivity(intent);
     }
 

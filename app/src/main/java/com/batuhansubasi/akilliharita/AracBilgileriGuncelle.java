@@ -1,6 +1,5 @@
 package com.batuhansubasi.akilliharita;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -12,7 +11,6 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -48,7 +46,7 @@ public class AracBilgileriGuncelle extends AppCompatActivity implements View.OnC
         //activity values
         model        = (EditText)    findViewById(R.id.model_t);
         list2        = (ListView)    findViewById(R.id.yil_t);
-        renk         = (EditText)    findViewById(R.id.renk_t);
+        renk         = (EditText)    findViewById(R.id.adSoyad_t);
         guncelle     = (Button)      findViewById(R.id.guncelle);
         list         = (ListView)    findViewById(R.id.marka_t);
 
@@ -85,12 +83,12 @@ public class AracBilgileriGuncelle extends AppCompatActivity implements View.OnC
         //giris yapilan mail adresi
         String girisYapilanMail = getIntent().getStringExtra("EXTRA_SESSION_ID");
 
-        //email adresine göre arac bilgilerinin firestoredan çekilmesi...
-        noteRef = db.collection("CarInfos").document(girisYapilanMail);
 
+//email adresine göre arac bilgilerinin firestoredan çekilmesi...
+        noteRef = db.collection("CarInfos").document(girisYapilanMail);
         noteRef.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
-            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                public void onSuccess(DocumentSnapshot documentSnapshot) {
                 if (documentSnapshot.exists()){
                     int markaID = 0, yilID = 0;
 

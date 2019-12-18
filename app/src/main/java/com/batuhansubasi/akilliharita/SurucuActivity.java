@@ -36,10 +36,9 @@ public class SurucuActivity extends FragmentActivity implements OnMapReadyCallba
     private static final int PERMISSIONS_REQUEST = 100;
     double enlem, boylam;
     private ProgressDialog progressDialog;
-    private String email;
+    private String email, surucuDurumu;
     private int haritaOdaklanmasiIcinKontrolDegiskeni = 0;
     private Button degistirButton;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -120,7 +119,7 @@ public class SurucuActivity extends FragmentActivity implements OnMapReadyCallba
                     //HashMap yapisi kullaniliyor.
                     location.put("enlem", locationResult.getLastLocation().getLatitude());//Yapiya enlem key'i ile enlem bilgisi eklenir.
                     location.put("boylam", locationResult.getLastLocation().getLongitude());//Yapiya boylam key'i ile boylam bilgisi eklenir.
-                    location.put("surucu_Durumu", "cevrimici");
+                    location.put("surucu_Durumu", surucuDurumu);
                     db.collection("suruculer").document(email).set(location);//riders koleksiyonuna giriş yapan kullanicinin ismi ile bir dokuman eklenir.
                     enlem = locationResult.getLastLocation().getLatitude();//enlem degiskenine hesaplanan enlem degeri atanir.
                     boylam = locationResult.getLastLocation().getLongitude();//boylam degiskenine hesaplanan boylam degeri atanir.
@@ -145,18 +144,20 @@ public class SurucuActivity extends FragmentActivity implements OnMapReadyCallba
     protected void onStart() {
         super.onStart();
         surucununDurumunuDegistir("cevrimici");
+        surucuDurumu = "cevrimici";
     }
     @Override
     protected void onStop() {
         super.onStop();
         surucununDurumunuDegistir("cevrimdisi");
+        surucuDurumu = "cevrimdisi";
     }
     @Override
     protected void onDestroy() {
         super.onDestroy();
         surucununDurumunuDegistir("cevrimdisi");
+        surucuDurumu = "cevrimdisi";
     }
-
 
     @Override
     public void onClick(View view) {

@@ -8,6 +8,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -21,9 +22,14 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.core.Context;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
@@ -34,8 +40,6 @@ public class YolcuActivity extends FragmentActivity implements OnMapReadyCallbac
     private GoogleMap mMap;
     private static final int PERMISSIONS_REQUEST = 100;
     private double enlem, boylam;
-    private ArrayList<Surucu> suruculer = new ArrayList<Surucu>();
-    private Surucu surucuAl;
     private int haritaOdaklanmasiIcinKontrolDegiskeni = 0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -115,30 +119,73 @@ public class YolcuActivity extends FragmentActivity implements OnMapReadyCallbac
         Toast.makeText(this, "GPS tracking enabled", Toast.LENGTH_SHORT).show();
         konumGuncellemeTalebindeBulun();
     }
-
     public void konumuBul(View view) {
       suruculeriGoster();
     }
 
     public void suruculeriGoster(){
         mMap.clear();
-        suruculer.clear();
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("suruculer")
+        final FirebaseFirestore[] db = {FirebaseFirestore.getInstance()};
+        db[0].collection("suruculer")
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if(task.isSuccessful()) {
                             for (QueryDocumentSnapshot document : task.getResult()) {
-                                surucuAl = new Surucu(document.getDouble("enlem"), document.getDouble("boylam"), document.getString("surucu_Durumu"));
-                                if(surucuAl.surucununDurumu == "cevrimici") {
-                                    suruculer.add(surucuAl);
-                                    mMap.addMarker(new MarkerOptions().position(new LatLng(surucuAl.enlem, surucuAl.boylam)));
+                                if(document.getString("surucu_Durumu").equals("cevrimici") && mesafeHesaplama(enlem, boylam, document.getDouble("enlem"), document.getDouble("boylam"))) {
+                                    aracBilgileriniBilgiEkranindaGoster(document.getId(), document.getDouble("enlem"), document.getDouble("boylam"));
                                 }
                             }
                         }
                     }
                 });
     }
+    public void aracBilgileriniBilgiEkranindaGoster(final String email, final double enlem, final double boylam) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        DocumentReference docRef = db.collection("CarInfos").document(email);
+        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                MarkerOptions markerAyarlari = new MarkerOptions();
+                markerAyarlari.position(new LatLng(enlem, boylam))
+                        .title(email);
+                BilgiEkraniTaslagi aracBilgisi = new BilgiEkraniTaslagi();
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    if (document.exists()) {
+                        aracBilgisi.setAdSoyad(document.getString("adSoyad"));
+                        aracBilgisi.setMarka(document.getString("marka"));
+                        aracBilgisi.setModel(document.getString("model"));
+                        aracBilgisi.setPlaka(document.getString("plaka"));
+                        aracBilgisi.setPuan(document.getDouble("puan"));
+                        BilgiEkrani customInfoWindow = new BilgiEkrani(YolcuActivity.this);
+                        mMap.setInfoWindowAdapter(customInfoWindow);
+                        Marker m = mMap.addMarker(markerAyarlari);
+                        m.setTag(aracBilgisi);
+                        m.showInfoWindow();
+                    } else {
+                    }
+                }
+            }
+        });
+    }
+    private boolean mesafeHesaplama(double enlem1, double boylam1, double enlem2, double boylam2) {
+        double theta = boylam1 - boylam2;
+        double dist = Math.sin(deg2rad(enlem1)) * Math.sin(deg2rad(enlem2)) + Math.cos(deg2rad(enlem1)) * Math.cos(deg2rad(enlem2)) * Math.cos(deg2rad(theta));
+        dist = Math.acos(dist);
+        dist = rad2deg(dist);
+        dist = dist * 60 * 1.1515;
+        dist = dist * 1.609344;
+        if(dist < 1)
+            return true;
+        return false;
+    }
+    private double deg2rad(double deg) {
+        return (deg * Math.PI / 180.0);
+    }
+    private double rad2deg(double rad) {
+        return (rad * 180.0 / Math.PI);
+    }
+
 }
