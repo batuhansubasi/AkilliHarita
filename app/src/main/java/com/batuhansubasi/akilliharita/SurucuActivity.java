@@ -9,6 +9,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -24,8 +25,12 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.firebase.database.annotations.Nullable;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -52,6 +57,8 @@ public class SurucuActivity extends FragmentActivity implements OnMapReadyCallba
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.harita);
         mapFragment.getMapAsync(this);
+        yolcuCagirisiIcinAyarlar();
+        yolcuCagirisi();
         izinKontrolleri();
         //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(enlem, boylam), 2));
     }
@@ -158,20 +165,43 @@ public class SurucuActivity extends FragmentActivity implements OnMapReadyCallba
         surucununDurumunuDegistir("cevrimdisi");
         surucuDurumu = "cevrimdisi";
     }
-
     @Override
     public void onClick(View view) {
         if (view == degistirButton){ //Sürücünün araç bilgilerinin istenmesi
-
-            //Login Activity' den gelen email bilgisini alıyorum...
-            String secilenKullanıcıAdıMail = getIntent().getStringExtra("EXTRA_SESSION_ID");
-
-            secilenKullanıcıAdıMail = secilenKullanıcıAdıMail + "@surucu.com";
-
             //AracBilgileriniDegistir Activity' sine email ile beraber yolluyorum.
             Intent intent = new Intent(SurucuActivity.this, AracBilgileriGuncelle.class);
-            intent.putExtra("EXTRA_SESSION_ID", secilenKullanıcıAdıMail);
+            intent.putExtra("EXTRA_SESSION_ID", email);
             startActivity(intent);
         }
+    }
+    public void yolcuCagirisiIcinAyarlar() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        Map<String, Object> lokasyon = new HashMap<>();
+        lokasyon.put("yolcuKoordinatiEnlem", 0);
+        lokasyon.put("yolcuKoordinatiBoylam", 0);
+        db.collection("cagirilanAraclar").document(email).set(lokasyon);
+    }
+    public void yolcuCagirisi() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        final DocumentReference docRef = db.collection("cagirilanAraclar").document(email);
+        docRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
+            @Override
+            public void onEvent(@Nullable DocumentSnapshot snapshot,
+                                @Nullable FirebaseFirestoreException e) {
+                if (e != null) {
+                    return;
+                }
+                if (snapshot != null && snapshot.exists()) {
+                    if (snapshot.getDouble("yolcuKoordinatiEnlem") != 0 && snapshot.getDouble("yolcuKoordinatiBoylam") != 0) {
+                        rotaOlustur();//Bu kısma yolcunun enlem ve boylam bilgisi parametre olarak gönderilecek.
+                    }                 //snapshot.getDouble("yolcuKoordinatiEnlem") enlem için.
+                } else {              //snapshot.getDouble("yolcuKoordinatiBoylam") boylam için.
+                                      //Sürücü enlem bilgisi enlem değişkeninde.
+                }                     //Sürücü boylam bilgisi boylam değişkeninde.
+            }
+        });
+    }
+    public void rotaOlustur() {
+
     }
 }

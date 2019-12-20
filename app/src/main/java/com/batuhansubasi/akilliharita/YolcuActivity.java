@@ -35,12 +35,15 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
-public class YolcuActivity extends FragmentActivity implements OnMapReadyCallback/*, View.OnClickListener*/ {
+public class YolcuActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
     private GoogleMap mMap;
     private static final int PERMISSIONS_REQUEST = 100;
     private double enlem, boylam;
     private int haritaOdaklanmasiIcinKontrolDegiskeni = 0;
+    private String gonderilecekKullaniciAdi;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,6 +70,7 @@ public class YolcuActivity extends FragmentActivity implements OnMapReadyCallbac
         LatLng sydney = new LatLng(-34, 151);
         //mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
         //mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        mMap.setOnMarkerClickListener(this);
     }
     public void izinKontrolleri() {
         LocationManager lm = (LocationManager) getSystemService(LOCATION_SERVICE);
@@ -163,7 +167,6 @@ public class YolcuActivity extends FragmentActivity implements OnMapReadyCallbac
                         mMap.setInfoWindowAdapter(customInfoWindow);
                         Marker m = mMap.addMarker(markerAyarlari);
                         m.setTag(aracBilgisi);
-                        m.showInfoWindow();
                     } else {
                     }
                 }
@@ -187,5 +190,19 @@ public class YolcuActivity extends FragmentActivity implements OnMapReadyCallbac
     private double rad2deg(double rad) {
         return (rad * 180.0 / Math.PI);
     }
-
+    @Override
+    public boolean onMarkerClick(final Marker marker) {
+        gonderilecekKullaniciAdi = marker.getTitle();
+        return false;
+    }
+    public void surucuCagir(View view) {
+        surucuyuCagir();
+    }
+    public void surucuyuCagir() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        Map<String, Object> lokasyon = new HashMap<>();
+        lokasyon.put("yolcuKoordinatiEnlem", enlem);
+        lokasyon.put("yolcuKoordinatiBoylam", boylam);
+        db.collection("cagirilanAraclar").document(gonderilecekKullaniciAdi).set(lokasyon);
+    }
 }

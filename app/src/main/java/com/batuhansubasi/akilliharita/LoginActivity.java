@@ -175,19 +175,19 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                             //bu kullanıcıyla alakalı araç bilgisi var mı kontrolü?
 
                             //firestore
-                            db = FirebaseFirestore.getInstance();
+                            //db = FirebaseFirestore.getInstance();
 
                             //email adresine göre arac bilgilerinin firestoredan çekilmesi...
-                            noteRef = db.collection("CarInfos").document(kullaniciAdi);
+                            //noteRef = db.collection("CarInfos").document(kullaniciAdi);
 
-                            noteRef.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                                @Override
-                                public void onSuccess(DocumentSnapshot documentSnapshot) {
+                            //noteRef.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                                /*@Override
+                                public void onSuccess(DocumentSnapshot documentSnapshot) {*/
                                     //Arac bilgisi bulunduysa sürücü sayfasinin gösterilmesi
                                     surucuSayfasi();
-                                }
+                                //}
 
-                            }).addOnFailureListener(new OnFailureListener() {
+                            /*}).addOnFailureListener(new OnFailureListener() {
                                 @Override
                                 public void onFailure(@NonNull Exception e) {
                                     //Arac bilgisi bulunamadığı için arac bilgileri ekranına yönlendirilmesi
@@ -204,7 +204,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                                     progressDialog.hide();
                                     AracBilgileriEkle();
                                 }
-                            });
+                            });*/
                         }
                     }
                 }
