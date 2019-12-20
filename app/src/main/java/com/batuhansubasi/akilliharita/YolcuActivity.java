@@ -180,7 +180,7 @@ public class YolcuActivity extends FragmentActivity implements OnMapReadyCallbac
         dist = rad2deg(dist);
         dist = dist * 60 * 1.1515;
         dist = dist * 1.609344;
-        if(dist < 1)
+        if(dist <= 100)
             return true;
         return false;
     }

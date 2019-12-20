@@ -25,6 +25,9 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.firebase.database.annotations.Nullable;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -35,7 +38,7 @@ import com.google.firebase.firestore.FirebaseFirestoreException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class SurucuActivity extends FragmentActivity implements OnMapReadyCallback,View.OnClickListener {
+public class SurucuActivity extends FragmentActivity implements OnMapReadyCallback,View.OnClickListener, TaskLoadedCallback {
 
     private GoogleMap mMap;
     private static final int PERMISSIONS_REQUEST = 100;
@@ -44,6 +47,9 @@ public class SurucuActivity extends FragmentActivity implements OnMapReadyCallba
     private String email, surucuDurumu;
     private int haritaOdaklanmasiIcinKontrolDegiskeni = 0;
     private Button degistirButton;
+    private Polyline currentPolyline;
+    private MarkerOptions place_surucu, place_yolcu;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -174,6 +180,7 @@ public class SurucuActivity extends FragmentActivity implements OnMapReadyCallba
             startActivity(intent);
         }
     }
+
     public void yolcuCagirisiIcinAyarlar() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         Map<String, Object> lokasyon = new HashMap<>();
@@ -181,6 +188,7 @@ public class SurucuActivity extends FragmentActivity implements OnMapReadyCallba
         lokasyon.put("yolcuKoordinatiBoylam", 0);
         db.collection("cagirilanAraclar").document(email).set(lokasyon);
     }
+
     public void yolcuCagirisi() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         final DocumentReference docRef = db.collection("cagirilanAraclar").document(email);
@@ -193,7 +201,12 @@ public class SurucuActivity extends FragmentActivity implements OnMapReadyCallba
                 }
                 if (snapshot != null && snapshot.exists()) {
                     if (snapshot.getDouble("yolcuKoordinatiEnlem") != 0 && snapshot.getDouble("yolcuKoordinatiBoylam") != 0) {
-                        rotaOlustur();//Bu kısma yolcunun enlem ve boylam bilgisi parametre olarak gönderilecek.
+                        double local_enlem  = snapshot.getDouble("yolcuKoordinatiEnlem");
+                        double local_boylam = snapshot.getDouble("yolcuKoordinatiBoylam");
+                        place_yolcu = new MarkerOptions().position(new LatLng(local_enlem, local_boylam)).title("Yolcu");
+                        place_surucu = new MarkerOptions().position(new LatLng(enlem, boylam)).title("Surucu");
+
+                        rotaOlustur(place_yolcu, place_surucu);//Bu kısma yolcunun enlem ve boylam bilgisi parametre olarak gönderilecek.
                     }                 //snapshot.getDouble("yolcuKoordinatiEnlem") enlem için.
                 } else {              //snapshot.getDouble("yolcuKoordinatiBoylam") boylam için.
                                       //Sürücü enlem bilgisi enlem değişkeninde.
@@ -201,7 +214,31 @@ public class SurucuActivity extends FragmentActivity implements OnMapReadyCallba
             }
         });
     }
-    public void rotaOlustur() {
-
+    public void rotaOlustur(MarkerOptions place1, MarkerOptions place2) {
+        new FetchURL(SurucuActivity.this).execute(getUrl(place1.getPosition(), place2.getPosition(), "driving"), "driving");
     }
+
+    @Override
+    public void onTaskDone(Object... values) {
+        if (currentPolyline != null)
+            currentPolyline.remove();
+        currentPolyline = mMap.addPolyline((PolylineOptions) values[0]);
+    }
+
+    private String getUrl(LatLng origin, LatLng dest, String directionMode) {
+        // Origin of route
+        String str_origin = "origin=" + origin.latitude + "," + origin.longitude;
+        // Destination of route
+        String str_dest = "destination=" + dest.latitude + "," + dest.longitude;
+        // Mode
+        String mode = "mode=" + directionMode;
+        // Building the parameters to the web service
+        String parameters = str_origin + "&" + str_dest + "&" + mode;
+        // Output format
+        String output = "json";
+        // Building the url to the web service
+        String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters + "&key=" + getString(R.string.google_maps_key);
+        return url;
+    }
+
 }
