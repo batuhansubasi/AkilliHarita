@@ -205,12 +205,12 @@ public class SurucuActivity extends FragmentActivity implements OnMapReadyCallba
                         double local_boylam = snapshot.getDouble("yolcuKoordinatiBoylam");
                         place_yolcu = new MarkerOptions().position(new LatLng(local_enlem, local_boylam)).title("Yolcu");
                         place_surucu = new MarkerOptions().position(new LatLng(enlem, boylam)).title("Surucu");
+                        mMap.addMarker(new MarkerOptions().position(new LatLng(local_enlem, local_boylam)));
+                        rotaOlustur(place_yolcu, place_surucu);
+                    }
+                } else {
 
-                        rotaOlustur(place_yolcu, place_surucu);//Bu kısma yolcunun enlem ve boylam bilgisi parametre olarak gönderilecek.
-                    }                 //snapshot.getDouble("yolcuKoordinatiEnlem") enlem için.
-                } else {              //snapshot.getDouble("yolcuKoordinatiBoylam") boylam için.
-                                      //Sürücü enlem bilgisi enlem değişkeninde.
-                }                     //Sürücü boylam bilgisi boylam değişkeninde.
+                }
             }
         });
     }
@@ -240,5 +240,4 @@ public class SurucuActivity extends FragmentActivity implements OnMapReadyCallba
         String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters + "&key=" + getString(R.string.google_maps_key);
         return url;
     }
-
 }

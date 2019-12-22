@@ -114,7 +114,7 @@
         app:layout_constraintTop_toBottomOf="@+id/textView7" />
 
     <EditText
-        android:id="@+id/editText2"
+        android:id="@+id/plaka_t"
         android:layout_width="156dp"
         android:layout_height="40dp"
         android:layout_marginStart="31dp"
@@ -123,5 +123,17 @@
         android:inputType="textPersonName"
         app:layout_constraintStart_toEndOf="@+id/textView7"
         app:layout_constraintTop_toBottomOf="@+id/model_t" />
+
+    <TextView
+        android:id="@+id/textView9"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:layout_marginStart="95dp"
+        android:layout_marginTop="44dp"
+        android:layout_marginEnd="95dp"
+        android:text="Uygulamaya dönmek için tıklayınız."
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/guncelle" />
 
 </android.support.constraint.ConstraintLayout>

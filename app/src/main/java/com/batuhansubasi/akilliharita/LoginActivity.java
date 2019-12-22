@@ -12,6 +12,7 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -175,19 +176,43 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                             //bu kullanıcıyla alakalı araç bilgisi var mı kontrolü?
 
                             //firestore
-                            //db = FirebaseFirestore.getInstance();
+                            db = FirebaseFirestore.getInstance();
+                            DocumentReference docRef = db.collection("CarInfos").document(email);
+                            docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                @Override
+                                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                    if (task.isSuccessful()) {
+                                        DocumentSnapshot document = task.getResult();
+                                        if (document.exists()) {
+                                            surucuSayfasi();
+                                        } else {
+                                            Log.d("Message", "Test-1");
+                                            progressDialog.setMessage("Arac Bilgileriniz Eksik! Harita ekranına yönlendiremiyorum...");
+                                            progressDialog.show();
 
+                                            //3 saniye bekletiyorum, adamın progress dialog' u görmesi için
+                                            try {
+                                                Thread.sleep(3000);
+                                            } catch (InterruptedException ex) {
+                                                ex.printStackTrace();
+                                            }
+                                            progressDialog.hide();
+                                            AracBilgileriEkle();
+                                        }
+                                    }
+                                }
+                            });
+                            /*
                             //email adresine göre arac bilgilerinin firestoredan çekilmesi...
-                            //noteRef = db.collection("CarInfos").document(kullaniciAdi);
+                            noteRef = db.collection("CarInfos").document(email);
 
-                            //noteRef.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                                /*@Override
-                                public void onSuccess(DocumentSnapshot documentSnapshot) {*/
+                            noteRef.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                                @Override
+                                public void onSuccess(DocumentSnapshot documentSnapshot) {
                                     //Arac bilgisi bulunduysa sürücü sayfasinin gösterilmesi
                                     surucuSayfasi();
-                                //}
-
-                            /*}).addOnFailureListener(new OnFailureListener() {
+                                }
+                            }).addOnFailureListener(new OnFailureListener() {
                                 @Override
                                 public void onFailure(@NonNull Exception e) {
                                     //Arac bilgisi bulunamadığı için arac bilgileri ekranına yönlendirilmesi
@@ -200,7 +225,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                                     } catch (InterruptedException ex) {
                                         ex.printStackTrace();
                                     }
-
                                     progressDialog.hide();
                                     AracBilgileriEkle();
                                 }
@@ -208,11 +232,9 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                         }
                     }
                 }
-
         });
     }
     }
-
 
     private boolean kontrol(String kullaniciAdi, String sifre) {
         if(TextUtils.isEmpty(kullaniciAdi)){
@@ -246,7 +268,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     public void AracBilgileriEkle() {
         //AracBilgileriniEkle Activity' sine Geçiş
         Intent intent = new Intent(LoginActivity.this, AracBilgileriEkle.class);
-        intent.putExtra("EXTRA_SESSION_ID", kullaniciAdi);
+        intent.putExtra("EXTRA_SESSION_ID", email);
         startActivity(intent);
     }
 

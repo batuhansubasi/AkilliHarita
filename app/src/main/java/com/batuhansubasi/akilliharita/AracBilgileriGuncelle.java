@@ -1,5 +1,6 @@
 package com.batuhansubasi.akilliharita;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -11,6 +12,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -30,6 +32,7 @@ public class AracBilgileriGuncelle extends AppCompatActivity implements View.OnC
     private ArrayAdapter<String> adapter;
     private EditText adSoyad, model, plaka;
     private Button guncelle;
+    private TextView uygulamayaDon;
     private String[] araba_markalari = {"Alfa Romeo","Anadolu","Aston Martin","Audi","Bentley","BMW","Bugatti","Buick","Cadillac","Caterham","Chery","Chevrolet","Chrysler","Citroën","Dacia" ,"Daewoo" ,"Daihatsu" ,"Dodge" ,"Ferrari" ,"Fiat" ,"Ford" ,"Geely","Honda","Hyundai","Ikco","Infiniti","Isuzu","Jaguar","Kia","Lada","Lamborghini","Lancia","Lexus","Lincoln","Lotus","Maserati","Mazda","McLaren","Mercedes - Benz","MG","Mini","Mitsubishi","Nissan","Opel","Peugeot","Pontiac","Porsche","Proton","Renault","Rolls-Royce","Rover","Seat","Skoda","Subaru","Suzuki","Tata","Tesla","Tofaş","Toyota","Volkswagen","Volvo" };
     private FirebaseFirestore db;
     private DocumentReference noteRef;
@@ -45,12 +48,14 @@ public class AracBilgileriGuncelle extends AppCompatActivity implements View.OnC
         //activity values
         adSoyad      = (EditText)    findViewById(R.id.adSoyad_t);
         model        = (EditText)    findViewById(R.id.model_t);
-        plaka         = (EditText)    findViewById(R.id.plaka_t);
+        plaka        = (EditText)    findViewById(R.id.plaka_t);
         guncelle     = (Button)      findViewById(R.id.guncelle);
         list         = (ListView)    findViewById(R.id.marka_t);
+        uygulamayaDon = (TextView)   findViewById(R.id.textView9);
 
         //basılabilenler
         guncelle.setOnClickListener(this);
+        uygulamayaDon.setOnClickListener(this);
 
         //listbox 1.ye verilerin eklenmesi
         adapter = new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_spinner_item, araba_markalari);
@@ -92,7 +97,7 @@ public class AracBilgileriGuncelle extends AppCompatActivity implements View.OnC
                     model.setText(documentSnapshot.getString("model"));
                     plaka.setText(documentSnapshot.getString("plaka"));
                     puan = documentSnapshot.getDouble("puan");
-
+                    secilenMarka = documentSnapshot.getString("marka");
                 } else {
                     Toast.makeText(getApplicationContext(), "Arac bilgileri gelmedi. Kayıt olurken girilmemis!...", Toast.LENGTH_LONG).show();
                     return;
@@ -114,13 +119,18 @@ public class AracBilgileriGuncelle extends AppCompatActivity implements View.OnC
         if (view == guncelle){
             changeCarInformation();
         }
+        else if (view == uygulamayaDon) {
+            Intent intent = new Intent(AracBilgileriGuncelle.this, SurucuActivity.class);
+            intent.putExtra("EXTRA_SESSION_ID", getIntent().getStringExtra("EXTRA_SESSION_ID"));
+            startActivity(intent);
+        }
     }
 
     public void changeCarInformation(){
         String secilenAdSoyad          = adSoyad.getText().toString().trim();
         String secilenModel            = model.getText().toString().trim();
         String secilenPlaka            = plaka.getText().toString().trim();
-        String secilenKullanıcıAdıMail = getIntent().getStringExtra("EXTRA_SESSION_ID");
+        final String secilenKullanıcıAdıMail = getIntent().getStringExtra("EXTRA_SESSION_ID");
 
         if(TextUtils.isEmpty(secilenMarka)){
             Toast.makeText(getApplicationContext(), "Marka Bilgisi Bos!...", Toast.LENGTH_LONG).show();
@@ -159,6 +169,9 @@ public class AracBilgileriGuncelle extends AppCompatActivity implements View.OnC
             @Override
             public void onSuccess(Void aVoid) {
                 Toast.makeText(getApplicationContext(), "Basarili!...", Toast.LENGTH_LONG).show();
+                Intent intent = new Intent(AracBilgileriGuncelle.this, SurucuActivity.class);
+                intent.putExtra("EXTRA_SESSION_ID", secilenKullanıcıAdıMail);
+                startActivity(intent);
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override

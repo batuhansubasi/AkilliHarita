@@ -128,7 +128,7 @@ public class AracBilgileriEkle extends AppCompatActivity implements View.OnClick
             public void onSuccess(Void aVoid) {
                 Toast.makeText(getApplicationContext(), "Basarili!...", Toast.LENGTH_LONG).show();
                 Intent intent = new Intent(AracBilgileriEkle.this, SurucuActivity.class);
-                intent.putExtra("email", secilenKullanıcıAdıMail);
+                intent.putExtra("EXTRA_SESSION_ID", secilenKullanıcıAdıMail);
                 startActivity(intent);
             }
         }).addOnFailureListener(new OnFailureListener() {
